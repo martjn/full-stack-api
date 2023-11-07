@@ -29,45 +29,6 @@ router.post("/", validateToken, async (req, res) => {
   res.json(post);
 });
 
-/*
-router.put("/:id", validateToken, async (req, res) => {
-  try{
-    const post = await Posts.findOne({
-      where: {
-        id: req.params.id,
-      }
-    })
-
-    if (!post) {
-      return res.status(404).json({ error: "Post not found" });
-    }
-
-    if(post.username === req.body.username){
-
-      post.set({
-        title: req.body.title,
-        postText: req.body.postText,
-        username: req.body.username
-      })
-    
-      await post.save();
-    
-      res.json(req.body);
-    }
-    else{
-      res.json({error: "unauthorized"})
-    }
-  
-  }
-  catch(error){
-    console.error(error);
-    res.status(500).json({error: error})
-  }
-
-
-})
-*/
-
 router.put("/title", validateToken, async (req, res) => {
   const { newTitle, id } = req.body;
   await Posts.update(

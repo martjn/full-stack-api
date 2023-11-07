@@ -62,15 +62,4 @@ router.get("/user/:id", async (req, res) => {
   res.json({id: basicInfo.id, username: basicInfo.username, associatedPosts: associatedPosts})
 })
 
-/*
-router.get("/", validateToken, async (req, res) => {
-  const listOfPosts = await Posts.findAll({include: [Likes]})
-
-  const likedPosts = await Likes.findAll({where: {
-    UserId: req.user.id
-  }})
-  res.json({listOfPosts: listOfPosts, likedPosts: likedPosts})
-});
-*/
-
 module.exports = router;
