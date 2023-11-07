@@ -3,6 +3,25 @@ const router = express.Router();
 const { Likes } = require("../models");
 const { validateToken } = require("../middlewares/AuthMiddleware");
 
+/**
+ * @swagger
+ * /likes:
+ *   post:
+ *     summary: Like or unlike a post
+ *     tags:
+ *       - likes
+ *     description: Like or unlike a post by providing the `PostId` in the request body.
+ *     parameters:
+ *       - name: PostId
+ *         in: formData
+ *         required: true
+ *         type: integer
+ *     responses:
+ *       200:
+ *         description: Post liked/unliked successfully.
+ *       400:
+ *         description: Post not found or user not authenticated.
+ */
 router.post("/", validateToken, async (req, res) => {
   const { PostId } = req.body;
   const UserId = req.user.id;
@@ -13,15 +32,16 @@ router.post("/", validateToken, async (req, res) => {
 
   if (!found) {
     await Likes.create({ PostId: PostId, UserId: UserId });
-    res.json({liked: true});
-  } else{
-    await Likes.destroy({where: {
-      PostId: PostId, UserId: UserId
-      
-    }})
-    res.json({liked: false});
+    res.json({ liked: true });
+  } else {
+    await Likes.destroy({
+      where: {
+        PostId: PostId,
+        UserId: UserId,
+      },
+    });
+    res.json({ liked: false });
   }
-  
 });
 
 module.exports = router;
