@@ -32,6 +32,12 @@ router.post("/", validateToken, async (req, res) => {
 
   if (!found) {
     await Likes.create({ PostId: PostId, UserId: UserId });
+    await Logs.create({
+      actionType: "insert",
+      modelName: "Likes",
+      invokerId: UserId,
+      description: `Post with id ${PostId} liked by User with id ${UserId}`
+    })
     res.json({ liked: true });
   } else {
     await Likes.destroy({
@@ -40,6 +46,12 @@ router.post("/", validateToken, async (req, res) => {
         UserId: UserId,
       },
     });
+    await Logs.create({
+      actionType: "delete",
+      modelName: "Likes",
+      invokerId: UserId,
+      description: `Post with id ${PostId} unliked by User with id ${UserId}`
+    })
     res.json({ liked: false });
   }
 });
