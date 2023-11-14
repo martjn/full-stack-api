@@ -1,5 +1,3 @@
-const SequelizeAudit = require("sequelize-audit");
-
 module.exports = (sequelize, DataTypes, models) => {
   const Users = sequelize.define("Users", {
     username: {
@@ -10,10 +8,6 @@ module.exports = (sequelize, DataTypes, models) => {
       type: DataTypes.STRING,
       allowNull: false,
     },
-  });
-
-  SequelizeAudit(Users, {
-    strategy: "all",
   });
 
   Users.associate = (models) => {

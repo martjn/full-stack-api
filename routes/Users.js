@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { Users } = require("../models");
+const { Users, Logs } = require("../models");
 const { Posts, Likes } = require("../models");
 const bcrypt = require("bcrypt");
 const { validateToken } = require("../middlewares/AuthMiddleware");
@@ -44,6 +44,12 @@ router.post("/", async (req, res) => {
         username: username,
         password: hash,
       });
+      Logs.create({
+        actionType: "insert",
+        modelName: "Users",
+        invokerId: null,
+        description: `Registered user: "${username}"`
+      })
     });
     res.json({ status: "success" });
   } else {

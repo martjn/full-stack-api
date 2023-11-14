@@ -1,3 +1,4 @@
+// No changes in this file.
 module.exports = (sequelize, DataTypes) => {
   const Logs = sequelize.define("Logs", {
     actionType: {
@@ -10,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     },
     invokerId: {
       type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    description: {
+      type: DataTypes.STRING,
       allowNull: true,
     }
   })
