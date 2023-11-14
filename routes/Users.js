@@ -39,12 +39,12 @@ router.post("/", async (req, res) => {
   });
 
   if (!user) {
-    bcrypt.hash(password, 10).then((hash) => {
-      Users.create({
+    bcrypt.hash(password, 10).then(async (hash) => {
+      await Users.create({
         username: username,
         password: hash,
       });
-      Logs.create({
+      await Logs.create({
         actionType: "insert",
         modelName: "Users",
         invokerId: null,
