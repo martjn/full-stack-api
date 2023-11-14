@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataTypes) => {
+module.exports = (sequelize, DataTypes, models) => {
   const Users = sequelize.define("Users", {
     username: {
       type: DataTypes.STRING,
@@ -21,8 +21,8 @@ module.exports = (sequelize, DataTypes) => {
   // Define a hook to log changes to the Results table
   Users.addHook("afterCreate", async (user, options) => {
     // Log the creation action to the Results table
-    await Logs.create({
-      action: "create",
+    await models.Logs.create({
+      actionType: "insert",
       modelName: "Users",
       invokerId: user.id,
     });
@@ -30,8 +30,8 @@ module.exports = (sequelize, DataTypes) => {
   // Define a hook to log changes to the Results table
   Users.addHook("afterUpdate", async (user, options) => {
     // Log the creation action to the Results table
-    await Logs.create({
-      action: "update",
+    await models.Logs.create({
+      actionType: "update",
       modelName: "Users",
       invokerId: user.id,
     });
@@ -39,11 +39,12 @@ module.exports = (sequelize, DataTypes) => {
   // Define a hook to log changes to the Results table
   Users.addHook("afterDestroy", async (user, options) => {
     // Log the creation action to the Results table
-    await Logs.create({
-      action: "destroy",
+    await models.Logs.create({
+      actionType: "delete",
       modelName: "Users",
       invokerId: user.id,
     });
   });
+
   return Users;
 };

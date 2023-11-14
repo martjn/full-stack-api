@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Logs = sequelize.define("Logs", {
-    action: {
+    actionType: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -14,5 +14,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   })
 
-  return Logs
+  return Logs;
 }
