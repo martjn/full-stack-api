@@ -32,28 +32,38 @@ const { sign } = require("jsonwebtoken");
  */
 router.post("/", async (req, res) => {
   const { username, password } = req.body;
-  const user = await Users.findOne({
-    where: {
-      username: username,
-    },
-  });
 
-  if (!user) {
-    bcrypt.hash(password, 10).then(async (hash) => {
+  try {
+    const user = await Users.findOne({
+      where: {
+        username: username,
+      },
+    });
+
+    if (!user) {
+      const hash = await bcrypt.hash(password, 10);
+
+      // Use await here to make sure the user is created before moving on
       await Users.create({
         username: username,
         password: hash,
       });
+
+      // Now that the user is created, create a log entry
       await Logs.create({
         actionType: "insert",
         modelName: "Users",
         invokerId: null,
-        description: `Registered user: "${username}"`
-      })
-    });
-    res.json({ status: "success" });
-  } else {
-    res.json({ status: "user_already_exists" });
+        description: `Registered user: "${username}"`,
+      });
+
+      res.json({ status: "success" });
+    } else {
+      res.json({ status: "user_already_exists" });
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ status: "error" });
   }
 });
 
