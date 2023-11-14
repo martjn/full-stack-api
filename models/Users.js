@@ -13,6 +13,9 @@ module.exports = (sequelize, DataTypes) => {
     Users.hasMany(models.Likes, {
       onDelete: "cascade",
     });
+    Users.hasMany(models.Logs, {
+      onDelete: "cascade",
+    })
   };
 
   // Define a hook to log changes to the Results table
