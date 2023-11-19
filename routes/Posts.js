@@ -31,7 +31,18 @@ const { validateToken } = require("../middlewares/AuthMiddleware");
  *         description: Unauthorized. Token missing or invalid.
  */
 router.get("/", validateToken, async (req, res) => {
-  const listOfPosts = await Posts.findAll({ include: [Likes] });
+  const { sortBy } = req.query;
+  let order = [];
+
+  if (sortBy === "date") {
+    order = [["createdAt", "ASC"]];
+  } else if (sortBy === "popularity") {
+    order = [[Likes, "createdAt", "DESC"]];
+  } else {
+    // Default sorting or handle unknown sortBy values
+    order = [["createdAt", "ASC"]];
+  }
+  const listOfPosts = await Posts.findAll({ include: [Likes], order });
 
   const likedPosts = await Likes.findAll({
     where: {
@@ -105,14 +116,14 @@ router.post("/", validateToken, async (req, res) => {
   const user = await Users.findOne({
     where: {
       username: req.user.username,
-    }
-  })
+    },
+  });
   await Logs.create({
     actionType: "insert",
     modelName: "Posts",
     invokerId: user.id,
-    description: `created post titled "${req.body.title}"`
-  })
+    description: `created post titled "${req.body.title}"`,
+  });
   res.json(post);
 });
 
@@ -147,9 +158,9 @@ router.put("/title", validateToken, async (req, res) => {
 
   const oldVersion = await Posts.findOne({
     where: {
-      id: id
-    }
-  })
+      id: id,
+    },
+  });
 
   await Posts.update(
     { title: newTitle },
@@ -163,8 +174,8 @@ router.put("/title", validateToken, async (req, res) => {
     actionType: "update",
     modelName: "Posts",
     invokerId: req.user.id,
-    description: `Post with id ${id}: changed title from "${oldVersion.title}" -> "${newTitle}"`
-  })
+    description: `Post with id ${id}: changed title from "${oldVersion.title}" -> "${newTitle}"`,
+  });
   res.json(newTitle);
 });
 
@@ -198,9 +209,9 @@ router.put("/postText", validateToken, async (req, res) => {
   const { newText, id } = req.body;
   const oldVersion = await Posts.findOne({
     where: {
-      id: id
-    }
-  })
+      id: id,
+    },
+  });
   await Posts.update(
     { postText: newText },
     {
@@ -213,8 +224,8 @@ router.put("/postText", validateToken, async (req, res) => {
     actionType: "update",
     modelName: "Posts",
     invokerId: req.user.id,
-    description: `Post with id ${id}: changed postText from "${oldVersion.postText}" -> "${newText}"`
-  })
+    description: `Post with id ${id}: changed postText from "${oldVersion.postText}" -> "${newText}"`,
+  });
   res.json(newText);
 });
 
@@ -244,8 +255,8 @@ router.delete("/:postId", validateToken, async (req, res) => {
   const post = await Posts.findOne({
     where: {
       id: postId,
-    }
-  })
+    },
+  });
   await Posts.destroy({
     where: {
       id: postId,
@@ -255,8 +266,8 @@ router.delete("/:postId", validateToken, async (req, res) => {
     actionType: "delete",
     modelName: "Posts",
     invokerId: req.user.id,
-    description: `Deleted post titled "${post.title}" with id: ${postId}`
-  })
+    description: `Deleted post titled "${post.title}" with id: ${postId}`,
+  });
   res.json("Post deleted");
 });
 
