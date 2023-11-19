@@ -35,7 +35,7 @@ router.get("/", validateToken, async (req, res) => {
   let order = [];
 
   if (sortBy === "date") {
-    order = [["createdAt", "ASC"]];
+    order = [["createdAt", "DESC"]];
   } else if (sortBy === "popularity") {
     order = [[Likes, "createdAt", "DESC"]];
   } else {
