@@ -164,7 +164,7 @@ router.get("/user/:id", async (req, res) => {
   });
   const likedPosts = await Likes.findAll({
     where: {
-      UserId: req.user.id,
+      UserId: id
     },
   });
   res.json({
