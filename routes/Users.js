@@ -170,6 +170,7 @@ router.get("/user/:id", async (req, res) => {
   res.json({
     id: basicInfo.id,
     username: basicInfo.username,
+    createdAt: basicInfo.createdAt,
     associatedPosts: associatedPosts,
     likedPosts: likedPosts,
   });
