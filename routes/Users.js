@@ -7,6 +7,8 @@ const { validateToken } = require("../middlewares/AuthMiddleware");
 
 const { sign } = require("jsonwebtoken");
 
+const usersController = require("../controllers/usersController");
+
 /**
  * @swagger
  * /auth:
@@ -30,42 +32,7 @@ const { sign } = require("jsonwebtoken");
  *       400:
  *         description: User already exists.
  */
-router.post("/", async (req, res) => {
-  const { username, password } = req.body;
-
-  try {
-    const user = await Users.findOne({
-      where: {
-        username: username,
-      },
-    });
-
-    if (!user) {
-      const hash = await bcrypt.hash(password, 10);
-
-      // Use await here to make sure the user is created before moving on
-      await Users.create({
-        username: username,
-        password: hash,
-      });
-
-      // Now that the user is created, create a log entry
-      await Logs.create({
-        actionType: "insert",
-        modelName: "Users",
-        invokerId: null,
-        description: `Registered user: "${username}"`,
-      });
-
-      res.json({ status: "success" });
-    } else {
-      res.json({ status: "user_already_exists" });
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ status: "error" });
-  }
-});
+router.post("/", usersController.createUser);
 
 /**
  * @swagger
@@ -90,25 +57,7 @@ router.post("/", async (req, res) => {
  *       400:
  *         description: User does not exist or wrong password.
  */
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  const user = await Users.findOne({
-    where: {
-      username: username,
-    },
-  });
-
-  if (!user) res.json({ error: "user_no_exist" });
-  bcrypt.compare(password, user.password).then((match) => {
-    if (!match) res.json({ error: "wrong_password" });
-
-    const accessToken = sign(
-      { username: user.username, id: user.id },
-      "important_secret"
-    );
-    res.json({ token: accessToken, username: username, id: user.id });
-  });
-});
+router.post("/login", usersController.loginUser);
 
 /**
  * @swagger
@@ -125,9 +74,7 @@ router.post("/login", async (req, res) => {
  *         description: User not logged in or invalid token.
  */
 
-router.get("/auth", validateToken, (req, res) => {
-  res.json(req.user);
-});
+router.get("/auth", validateToken, usersController.getUserDetails);
 
 /**
  * @swagger
@@ -150,30 +97,6 @@ router.get("/auth", validateToken, (req, res) => {
  *         description: User not found.
  */
 
-router.get("/user/:id", async (req, res) => {
-  let order = [["createdAt", "DESC"]];
-  const id = req.params.id;
-
-  const basicInfo = await Users.findByPk(id);
-  const associatedPosts = await Posts.findAll({
-    where: {
-      username: basicInfo.username,
-    },
-    include: [Likes],
-    order
-  });
-  const likedPosts = await Likes.findAll({
-    where: {
-      UserId: id
-    },
-  });
-  res.json({
-    id: basicInfo.id,
-    username: basicInfo.username,
-    createdAt: basicInfo.createdAt,
-    associatedPosts: associatedPosts,
-    likedPosts: likedPosts,
-  });
-});
+router.get("/user/:id", usersController.getUserAssociatedPosts);
 
 module.exports = router;

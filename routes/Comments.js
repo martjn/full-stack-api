@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Comments, Logs } = require("../models");
 const { validateToken } = require("../middlewares/AuthMiddleware");
+const commentsController = require("../controllers/commentsController");
 
 /**
  * @swagger
@@ -27,15 +28,7 @@ const { validateToken } = require("../middlewares/AuthMiddleware");
  *       404:
  *         description: Post not found.
  */
-router.get("/:id", async (req, res) => {
-  const postId = req.params.id;
-  const comments = await Comments.findAll({
-    where: {
-      PostId: postId,
-    },
-  });
-  res.json(comments);
-});
+router.get("/:id", commentsController.getCommentById);
 
 /**
  * @swagger
@@ -61,19 +54,7 @@ router.get("/:id", async (req, res) => {
  *       401:
  *         description: Unauthorized, token validation failed.
  */
-router.post("/", validateToken, async (req, res) => {
-  const comment = req.body;
-  const username = req.user.username;
-  comment.username = username;
-  await Comments.create(comment);
-  await Logs.create({
-    actionType: "insert",
-    modelName: "Comments",
-    invokerId: req.user.id,
-    description: `User with id ${req.user.id} added a comment to post with id ${req.body.PostId}`
-  })
-  res.json(comment);
-});
+router.post("/", validateToken, commentsController.createComment);
 
 /**
  * @swagger
@@ -97,23 +78,6 @@ router.post("/", validateToken, async (req, res) => {
  *       404:
  *         description: Comment not found.
  */
-router.delete("/:commentId", validateToken, async (req, res) => {
-  const commentId = req.params.commentId;
-
-  await Comments.destroy({
-    where: {
-      id: commentId,
-    },
-  });
-
-  await Logs.create({
-    actionType: "delete",
-    modelName: "Comments",
-    invokerId: req.user.id,
-    description: `User with id ${req.user.id} deleted a comment from post with id ${req.body.PostId}`
-  })
-
-  res.json("DELETED SUCCESSFULLY");
-});
+router.delete("/:commentId", validateToken, commentsController.deleteComment);
 
 module.exports = router;

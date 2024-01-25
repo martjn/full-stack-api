@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { Posts, Likes, Users, Logs } = require("../models");
 const { validateToken } = require("../middlewares/AuthMiddleware");
+const postsController = require("../controllers/postsController");
 
 /**
  * @swagger
@@ -30,27 +31,7 @@ const { validateToken } = require("../middlewares/AuthMiddleware");
  *       401:
  *         description: Unauthorized. Token missing or invalid.
  */
-router.get("/", validateToken, async (req, res) => {
-  const { sortBy } = req.query;
-  let order = [];
-
-  if (sortBy === "date") {
-    order = [["createdAt", "DESC"]];
-  } else if (sortBy === "popularity") {
-    order = [[Likes, "createdAt", "DESC"]];
-  } else {
-    // Default sorting or handle unknown sortBy values
-    order = [["createdAt", "ASC"]];
-  }
-  const listOfPosts = await Posts.findAll({ include: [Likes], order });
-
-  const likedPosts = await Likes.findAll({
-    where: {
-      UserId: req.user.id,
-    },
-  });
-  res.json({ listOfPosts: listOfPosts, likedPosts: likedPosts });
-});
+router.get("/", validateToken, postsController.getPosts);
 /**
  * @swagger
  * /posts/{id}:
@@ -74,14 +55,7 @@ router.get("/", validateToken, async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Post'
  */
-router.get("/:id", async (req, res) => {
-  const post = await Posts.findOne({
-    where: {
-      id: req.params.id,
-    },
-  });
-  res.json(post);
-});
+router.get("/:id", postsController.getPostById);
 
 /**
  * @swagger
@@ -108,24 +82,7 @@ router.get("/:id", async (req, res) => {
  *       401:
  *         description: Unauthorized. Token missing or invalid.
  */
-router.post("/", validateToken, async (req, res) => {
-  const post = req.body;
-  post.username = req.user.username;
-  await Posts.create(post);
-
-  const user = await Users.findOne({
-    where: {
-      username: req.user.username,
-    },
-  });
-  await Logs.create({
-    actionType: "insert",
-    modelName: "Posts",
-    invokerId: user.id,
-    description: `created post titled "${req.body.title}"`,
-  });
-  res.json(post);
-});
+router.post("/", validateToken, postsController.createPost);
 
 /**
  * @swagger
@@ -153,31 +110,7 @@ router.post("/", validateToken, async (req, res) => {
  *       401:
  *         description: Unauthorized. Token missing or invalid.
  */
-router.put("/title", validateToken, async (req, res) => {
-  const { newTitle, id } = req.body;
-
-  const oldVersion = await Posts.findOne({
-    where: {
-      id: id,
-    },
-  });
-
-  await Posts.update(
-    { title: newTitle },
-    {
-      where: {
-        id: id,
-      },
-    }
-  );
-  await Logs.create({
-    actionType: "update",
-    modelName: "Posts",
-    invokerId: req.user.id,
-    description: `Post with id ${id}: changed title from "${oldVersion.title}" -> "${newTitle}"`,
-  });
-  res.json(newTitle);
-});
+router.put("/title", validateToken, postsController.updatePostTitle);
 
 /**
  * @swagger
@@ -205,29 +138,7 @@ router.put("/title", validateToken, async (req, res) => {
  *       401:
  *         description: Unauthorized. Token missing or invalid.
  */
-router.put("/postText", validateToken, async (req, res) => {
-  const { newText, id } = req.body;
-  const oldVersion = await Posts.findOne({
-    where: {
-      id: id,
-    },
-  });
-  await Posts.update(
-    { postText: newText },
-    {
-      where: {
-        id: id,
-      },
-    }
-  );
-  await Logs.create({
-    actionType: "update",
-    modelName: "Posts",
-    invokerId: req.user.id,
-    description: `Post with id ${id}: changed postText from "${oldVersion.postText}" -> "${newText}"`,
-  });
-  res.json(newText);
-});
+router.put("/postText", validateToken, postsController.updatePostText);
 
 /**
  * @swagger
@@ -250,25 +161,6 @@ router.put("/postText", validateToken, async (req, res) => {
  *       401:
  *         description: Unauthorized. Token missing or invalid.
  */
-router.delete("/:postId", validateToken, async (req, res) => {
-  const postId = req.params.postId;
-  const post = await Posts.findOne({
-    where: {
-      id: postId,
-    },
-  });
-  await Posts.destroy({
-    where: {
-      id: postId,
-    },
-  });
-  await Logs.create({
-    actionType: "delete",
-    modelName: "Posts",
-    invokerId: req.user.id,
-    description: `Deleted post titled "${post.title}" with id: ${postId}`,
-  });
-  res.json("Post deleted");
-});
+router.delete("/:postId", validateToken, postsController.deletePost);
 
 module.exports = router;
